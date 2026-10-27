@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Galeri Pribadi · Khusus Bungaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg-color: #FAF4F2;
+  --card-bg: #FFFFFF;
+  --text-main: #4A3B32;
+  --text-muted: #8C7B74;
+  --accent-pink: #D4A396;
+  --accent-pink-hover: #C38F81;
+  --border-light: #E5D4CE;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+#app {
+  width: 100%;
+  max-width: 420px;
+  height: 100vh;
+  position: relative;
+  background-color: var(--bg-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 0 40px rgba(0,0,0,0.04);
+  scroll-behavior: smooth;
+}
+.screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  min-height: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  background-color: var(--bg-color);
+  z-index: 1;
+}
+.screen.active { display: flex; opacity: 1; transform: translateY(0); z-index: 10; }
+
+h1, h2 { font-family: 'Playfair Display', serif; text-align: center; color: var(--text-main); font-weight: 400; }
+.subtitle {
+  font-size: 0.65rem; letter-spacing: 3px; color: var(--text-muted);
+  text-transform: uppercase; margin-bottom: 15px; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.subtitle::before, .subtitle::after { content: ''; height: 1px; width: 18px; background-color: var(--border-light); }
+.cursive { font-family: 'Great Vibes', cursive; font-size: 1.8rem; color: var(--text-main); }
+
+.btn-custom {
+  margin-top: 25px; padding: 12px 30px;
+  background-color: var(--bg-color); color: var(--text-main);
+  border: 1px solid var(--border-light); border-radius: 30px;
+  font-size: 0.85rem; font-weight: 500; cursor: pointer;
+  transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02); width: 100%;
+}
+.btn-custom:hover, .btn-custom:active { background-color: var(--border-light); transform: translateY(-2px); }
+.btn-primary { background-color: var(--accent-pink); color: white; border: none; box-shadow: 0 4px 15px rgba(212, 163, 150, 0.4); }
+.btn-primary:hover, .btn-primary:active { background-color: var(--accent-pink-hover); }
+
+.lock-container-ui { width: 100px; margin-top: 40px; margin-bottom: 15px; }
+.lock-title { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 25px; font-style: italic; font-family: 'Playfair Display', serif; }
+.dots-row { display: flex; gap: 14px; margin-bottom: 35px; height: 14px; }
+.pin-dot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--accent-pink); background-color: transparent; transition: all 0.2s ease; }
+.pin-dot.filled { background-color: var(--accent-pink); transform: scale(1.15); }
+.keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 22px; width: 100%; max-width: 270px; }
+.k-btn {
+  width: 65px; height: 65px; border-radius: 50%; background: #FFFFFF; border: none;
+  font-size: 1.35rem; color: var(--text-main); font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer;
+  display: flex; justify-content: center; align-items: center;
+  transition: transform 0.1s, background-color 0.2s;
+}
+.k-btn:active { transform: scale(0.92); background-color: var(--border-light); }
+.k-btn.empty { background: transparent; box-shadow: none; pointer-events: none; }
+
+#s2 { justify-content: center; }
+.env-box { cursor: pointer; text-align: center; transition: transform 0.3s ease; position: relative; z-index: 5; }
+.env-svg { width: 260px; filter: drop-shadow(0 10px 25px rgba(0,0,0,0.07)); transition: transform 0.3s ease; }
+.env-box:active .env-svg { transform: scale(0.97); }
+.env-text-hint { margin-top: 25px; font-family: 'Playfair Display', serif; font-style: italic; color: var(--text-muted); font-size: 0.95rem; }
+#bloom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; display: none; }
+.burst-flower {
+  position: absolute; background-size: contain; background-repeat: no-repeat; background-position: center;
+  opacity: 0; transform: scale(0) rotate(-40deg);
+  transition: all 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.scan-heading { font-size: 1.2rem; margin-bottom: 20px; line-height: 1.4; }
+.polaroid-box {
+  width: 100%; background: #FFFFFF; padding: 14px; border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 20px; position: relative;
+}
+.polaroid-frame {
+  width: 100%;
+  aspect-ratio: 1257 / 1200;   /* ✅ FOTO ASLI 1257x1200 */
+  border-radius: 8px; overflow: hidden; position: relative; background-color: #F0E6E1;
+}
+.polaroid-frame img {
+  width: 100%; height: 100%; object-fit: cover;
+  transform: scale(0.6); filter: blur(10px);
+  transition: filter 1.5s ease, transform 1.5s ease;
+}
+.polaroid-frame.scanned img { filter: blur(0); transform: scale(1); }
+.laser-scanner {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(to bottom, rgba(212,163,150,0) 0%, rgba(212,163,150,0.15) 50%, rgba(212,163,150,0.7) 100%);
+  border-bottom: 2px solid var(--accent-pink);
+  transform: translateY(-100%); animation: laserMove 2.2s infinite;
+}
+@keyframes laserMove { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+.check-group { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.check-row { display: flex; align-items: center; gap: 12px; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+.check-row.show { opacity: 1; transform: translateY(0); }
+.check-circle {
+  width: 20px; height: 20px; border-radius: 50%; background-color: var(--border-light);
+  display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+}
+.check-row.done .check-circle { background-color: var(--accent-pink); }
+.check-circle svg { width: 11px; stroke: white; opacity: 0; transition: opacity 0.3s; }
+.check-row.done .check-circle svg { opacity: 1; }
+.check-label { font-size: 0.8rem; color: var(--text-muted); }
+.check-label span { color: var(--text-main); font-weight: 500; opacity: 0; transition: opacity 0.3s; }
+.check-row.done .check-label span { opacity: 1; }
+
+#s4.active .anim-1 { animation: fadeSlideUp 0.8s ease forwards; animation-delay: 0.2s; opacity: 0; }
+#s4.active .anim-2 { animation: fadeSlideUp 0.8s ease forwards; animation-delay: 0.6s; opacity: 0; }
+#s4.active .anim-3 { animation: fadeSlideUp 0.8s ease forwards; animation-delay: 1.0s; opacity: 0; }
+#s4.active .anim-4 { animation: fadeSlideUp 0.8s ease forwards; animation-delay: 1.4s; opacity: 0; }
+@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.museum-plaque {
+  width: 100%; background: #FFFFFF; padding: 16px; border-radius: 10px;
+  border-left: 4px solid var(--accent-pink); font-size: 0.8rem; margin-bottom: 18px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02); text-align: left; line-height: 1.8;
+}
+.plaque-header { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 600; }
+.plaque-line { display: flex; }
+.plaque-k { width: 75px; font-weight: 500; color: var(--text-main); }
+.plaque-v { color: var(--text-muted); }
+.plaque-v.italic { color: var(--accent-pink); font-style: italic; font-family: 'Playfair Display', serif; }
+.artwork-title { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 10px 0 6px 0; color: var(--text-main); }
+.artwork-desc { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 10px; }
+
+.chat-bubble-view {
+  width: 100%; background: #FFFFFF; border-radius: 16px; padding: 15px 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03); min-height: 55px;
+  display: flex; align-items: center; border: 1px solid var(--border-light); position: relative;
+}
+.blinking-cursor {
+  display: inline-block; width: 2px; height: 1.2em; background-color: var(--accent-pink);
+  animation: blinkCursor 1s step-end infinite; vertical-align: middle; margin-left: 2px;
+}
+@keyframes blinkCursor { 50% { opacity: 0; } }
+.paper-card {
+  width: 100%; background: #FFFFFF; padding: 22px; border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-top: 15px; text-align: left;
+}
+.paper-card p { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 10px; }
+.paper-card p:last-child { margin-bottom: 0; }
+.strong-txt { color: var(--text-main); font-weight: 500; }
+
+.interactive-box { position: relative; width: 100%; margin-bottom: 15px; }
+.target-img { width: 100%; border-radius: 14px; display: block; box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+.dot-pin {
+  position: absolute; width: 34px; height: 34px; background: transparent;
+  transform: translate(-50%, -50%); cursor: pointer;
+  display: flex; justify-content: center; align-items: center; z-index: 5;
+}
+.dot-pin::after {
+  content: ''; width: 22px; height: 22px; background: rgba(255,255,255,0.9);
+  border: 2px solid var(--accent-pink); border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.dot-pin.active::after { background-color: var(--accent-pink); border-color: var(--text-main); }
+.dot-pin::before {
+  content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
+  border-radius: 50%; border: 1px solid var(--accent-pink);
+  animation: pulseWave 1.5s linear infinite; pointer-events: none;
+}
+.dot-pin.active::before { animation: none; display: none; }
+@keyframes pulseWave { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+.counter-badge { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; text-align: center; }
+
+.cards-deck { position: relative; width: 100%; height: 230px; margin-top: 15px; }
+.puji-card {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: #FFFFFF; padding: 26px 20px; border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; transform: translateX(40px); transition: all 0.4s ease; pointer-events: none;
+}
+.puji-card.active { opacity: 1; transform: translateX(0); pointer-events: auto; z-index: 2; }
+.puji-card.prev { transform: translateX(-40px); }
+.puji-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-style: italic; line-height: 1.6; color: var(--text-main); text-align: center; }
+.puji-quote-sign { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--border-light); line-height: 0; margin-bottom: 15px; text-align: left; }
+.deck-counter { font-size: 0.72rem; color: var(--text-muted); margin-top: 15px; letter-spacing: 1px; }
+
+.wax-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; margin-top: 20px; }
+.wax-btn-circle {
+  width: 75px; height: 75px; background-color: var(--accent-pink); border-radius: 50%; border: none;
+  box-shadow: 0 8px 20px rgba(212, 163, 150, 0.4); cursor: pointer;
+  display: flex; justify-content: center; align-items: center; position: relative;
+  transition: transform 0.2s ease; user-select: none;
+}
+.wax-btn-circle svg { width: 32px; fill: white; pointer-events: none; }
+.wax-btn-circle::before {
+  content: ''; position: absolute; width: 108%; height: 108%;
+  border-radius: 50%; border: 1px solid var(--accent-pink); animation: waxPulse 2s infinite;
+}
+@keyframes waxPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.3); opacity: 0; } }
+.wax-btn-circle.pressing { transform: scale(0.9); }
+.wax-btn-circle.pressing::before { animation: none; border: none; }
+.progress-ring {
+  position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%; border: 4px solid var(--border-light);
+  border-top-color: var(--text-main); opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.wax-btn-circle.pressing .progress-ring { opacity: 1; animation: spin 1.5s linear forwards; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.cert-outer { width: 100%; background: #FFFFFF; padding: 6px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 10px; }
+.cert-box-inner { border: 1px dashed var(--accent-pink); border-radius: 8px; padding: 24px 18px; text-align: center; background: #FFFFFF; }
+.cert-tag { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 15px; }
+.cert-heading { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--text-main); margin-bottom: 20px; }
+.cert-name-line { border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 12px 0; margin-bottom: 15px; }
+.cert-name-txt { font-family: 'Great Vibes', cursive; font-size: 2.3rem; color: var(--accent-pink); }
+.cert-desc { font-size: 0.78rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 25px; }
+.cert-details-grid { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--text-muted); text-align: left; }
+.cert-details-grid p { margin-bottom: 3px; }
+.cert-details-grid strong { color: var(--text-main); }
+.cert-sign-font { font-family: 'Great Vibes', cursive; font-size: 1.4rem; color: var(--text-main); margin-top: 8px; }
+.action-group { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<div id="bloom-overlay"></div>
+
+<div id="app">
+
+  <!-- ============ SCREEN 1: PASSCODE ============ -->
+  <div id="s1" class="screen active">
+    <svg class="lock-container-ui" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M25 50 V35 C25 15, 75 15, 75 35 V50" stroke="#D4A396" stroke-width="4" stroke-linecap="round"/>
+      <rect x="15" y="50" width="70" height="60" rx="15" fill="#FAF4F2" stroke="#D4A396" stroke-width="4"/>
+      <circle cx="50" cy="75" r="6" fill="#D4A396"/>
+      <path d="M50 75 V90" stroke="#D4A396" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="20" cy="40" r="5" fill="#C38F81" opacity="0.6"/>
+      <circle cx="80" cy="60" r="4" fill="#C38F81" opacity="0.6"/>
+    </svg>
+    <h2 class="lock-title">hayolo, apa yaa kode nyaa</h2>
+    <div class="dots-row">
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+      <div class="pin-dot" id="dot-4"></div>
+    </div>
+    <p id="pass-msg" style="font-size: 0.78rem; color: var(--text-muted); height: 18px; margin-bottom: 15px;"></p>
+    <div class="keypad-grid">
+      <button class="k-btn" onclick="pressKey(1)">1</button>
+      <button class="k-btn" onclick="pressKey(2)">2</button>
+      <button class="k-btn" onclick="pressKey(3)">3</button>
+      <button class="k-btn" onclick="pressKey(4)">4</button>
+      <button class="k-btn" onclick="pressKey(5)">5</button>
+      <button class="k-btn" onclick="pressKey(6)">6</button>
+      <button class="k-btn" onclick="pressKey(7)">7</button>
+      <button class="k-btn" onclick="pressKey(8)">8</button>
+      <button class="k-btn" onclick="pressKey(9)">9</button>
+      <button class="k-btn empty"></button>
+      <button class="k-btn" onclick="pressKey(0)">0</button>
+      <button class="k-btn" onclick="deleteKey()">
+        <svg style="width:22px; stroke:var(--text-main);" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+          <line x1="18" y1="9" x2="12" y2="15"></line>
+          <line x1="12" y1="9" x2="18" y2="15"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: ENVELOPE ============ -->
+  <div id="s2" class="screen">
+    <div class="env-box" id="env-wrapper" onclick="openEnvelopeSequence()">
+      <svg class="env-svg" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="200" rx="8" fill="#FDFBF9"/>
+        <path d="M0 0 L150 110 L300 0" fill="#F5EDE9" stroke="#E8DAD3" stroke-width="1"/>
+        <path d="M0 200 L150 90 L300 200" fill="#FFFFFF" stroke="#E8DAD3" stroke-width="1"/>
+        <path d="M20 180 Q40 150 60 170 T90 190" stroke="#D4A396" fill="none" stroke-width="2"/>
+        <circle cx="60" cy="170" r="15" fill="#D4A396" opacity="0.8"/>
+        <circle cx="75" cy="160" r="10" fill="#C38F81" opacity="0.6"/>
+        <circle cx="45" cy="165" r="8" fill="#F0C2C1"/>
+        <circle id="wax-svg-circle" cx="150" cy="100" r="25" fill="#C38F81" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.2))"/>
+        <path d="M142 95 Q150 110 158 95" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="150" cy="100" r="18" stroke="white" stroke-width="1" stroke-dasharray="2 2" fill="none"/>
+      </svg>
+      <p class="env-text-hint">Ketuk untuk membuka 🌸</p>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3: SCANNING ============ -->
+  <div id="s3" class="screen">
+    <p class="subtitle">GALERI PRIBADI • KHUSUS Bungaa</p>
+    <h2 class="scan-heading">Sepertinya ada masterpiece yang baru masuk.</h2>
+    <div class="polaroid-box">
+      <div class="polaroid-frame" id="polaroid-area">
+        <div class="laser-scanner" id="scanner-bar" style="display:none;"></div>
+        <img src="https://k.top4top.io/p_3952m201j0.jpeg?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=800&q=80" alt="Selfie">
+      </div>
+    </div>
+    <p id="scan-hint-msg" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Lagi ngecek PAP terbaru... Tunggu sebentar.</p>
+    <div class="check-group" id="check-box-list" style="display:none;">
+      <div class="check-row" id="row-1">
+        <div class="check-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        <div class="check-label">Checking senyum: <span>terlalu bahaya...</span></div>
+      </div>
+      <div class="check-row" id="row-2">
+        <div class="check-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        <div class="check-label">Checking aura: <span>9999/10...</span></div>
+      </div>
+      <div class="check-row" id="row-3">
+        <div class="check-circle"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        <div class="check-label">Checking manis: <span>sistem overload...</span></div>
+      </div>
+    </div>
+    <button class="btn-custom btn-primary" id="btn-init-scan" onclick="runScanEngine()">Mulai scan ✦</button>
+    <button class="btn-custom btn-primary" id="btn-proceed-art" style="display:none;" onclick="goToScreen('s4')">Lihat dari mataku ➔</button>
+  </div>
+
+  <!-- ============ SCREEN 4: MUSEUM LABEL ============ -->
+  <div id="s4" class="screen">
+    <p class="subtitle anim-1">GALERI PRIBADI • KHUSUS Bungaa</p>
+    <div class="polaroid-box anim-1" style="padding: 10px; margin-top: 5px; border-radius: 14px;">
+      <div class="polaroid-frame" style="aspect-ratio: 1257 / 1200;">
+        <img style="filter:blur(0); transform:scale(1);" src="https://k.top4top.io/p_3952m201j0.jpeg?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Selfie">
+        <div style="position:absolute; top:-12px; left:-12px; font-size:35px;">🌸</div>
+      </div>
+    </div>
+    <div class="museum-plaque anim-2">
+      <div class="plaque-header">LABEL MUSEUM</div>
+      <div class="plaque-line"><div class="plaque-k">Judul:</div><div class="plaque-v">Bukti bahwa bidadari bisa selfie</div></div>
+      <div class="plaque-line"><div class="plaque-k">Kategori:</div><div class="plaque-v">bidadari selfie mode manusia</div></div>
+      <div class="plaque-line"><div class="plaque-k">Status:</div><div class="plaque-v italic">officially admired</div></div>
+    </div>
+    <div style="text-align: center;" class="anim-3">
+      <p style="font-size: 0.73rem; color: var(--text-muted); margin-bottom: 4px;">Result: terlalu cantik buat cuma dibales singkat. Wajib dipajang di galeri hati.</p>
+      <h1 class="artwork-title">You Look Like Art.</h1>
+      <p class="artwork-desc">Jadi aku bikin satu tempat kecil buat muji kamu dengan lebih niat.</p>
+    </div>
+    <button class="btn-custom anim-4" onclick="goToScreen('s5'); setTimeout(initTypewriter, 500);">Lanjut ➔</button>
+  </div>
+
+  <!-- ============ SCREEN 5: TYPING ============ -->
+  <div id="s5" class="screen">
+    <p class="subtitle">RUANG 1/7 • REAKSI PERTAMA</p>
+    <h2>Reaksi pertamaku waktu lihat foto ini</h2>
+    <div id="chat-container" style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 25px;"></div>
+    <button class="btn-custom" style="opacity: 0; pointer-events: none; margin-top: 30px;" id="btn-skip-typing" onclick="goToScreen('s6')">Lanjut ➔</button>
+  </div>
+
+  <!-- ============ SCREEN 6: PAPER CARD ============ -->
+  <div id="s6" class="screen">
+    <p class="subtitle">RUANG 1/7 • REAKSI PERTAMA</p>
+    <div class="paper-card" style="margin-top: 15px;">
+      <p>Aku sempat diam sebentar.</p>
+      <p>Bukan karena bingung mau balas apa, tapi karena kadang kamu tuh kelihatan secantik itu sampai kata-kata rasanya kurang niat kalau cuma: <span class="strong-txt">"cantik banget sayang."</span></p>
+      <p>Jadi ini versi lebih panjangnya.</p>
+    </div>
+    <button class="btn-custom btn-primary" onclick="goToScreen('s7')">Lanjut</button>
+  </div>
+
+  <!-- ============ SCREEN 7: PINPOINTS ============ -->
+  <div id="s7" class="screen" style="justify-content: flex-start; padding-bottom: 80px;">
+    <p class="subtitle">RUANG 2/7 • DETAIL KECIL</p>
+    <h2>Hal-hal kecil yang aku notice</h2>
+    <p style="font-size: 0.78rem; color: var(--text-muted); text-align: center; margin: 12px 0 20px;">
+      Aku suka foto ini bukan cuma karena kamu cantik. Tapi karena ada banyak detail kecil yang bikin aku makin sadar: aku seberuntung itu punya kamu.<br><br>
+      <em>Ketuk titik-titik kecilnya ya ✨</em>
+    </p>
+    <div class="interactive-box">
+      <img class="target-img" src="https://k.top4top.io/p_3952m201j0.jpeg?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Detail">
+      <div class="dot-pin" style="top: 56%; left: 45%;" onclick="appendPinChat(this, 'senyumnya tuh illegal banget')"></div>
+      <div class="dot-pin" style="top:15%; left: 38%;" onclick="appendPinChat(this, 'tatapannya bikin sinyal jantung error')"></div>
+      <div class="dot-pin" style="top: 47%; left: 30%;" onclick="appendPinChat(this, 'pipinya kayak soft-launch surga')"></div>
+      <div class="dot-pin" style="top: 20%; left: 10%;" onclick="appendPinChat(this, 'rambutnya berantakan aja cantik')"></div>
+    </div>
+    <div id="pin-chat-feed" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; width: 100%; align-items: flex-start;"></div>
+    <div class="counter-badge" id="pin-tally" style="margin-top: auto;">0/4 catatan kebuka</div>
+    <button class="btn-custom btn-primary" id="btn-pass-s7" style="display:none;" onclick="goToScreen('s8')">Lanjut</button>
+  </div>
+
+  <!-- ============ SCREEN 8: CARD SLIDER ============ -->
+  <div id="s8" class="screen">
+    <p class="subtitle">RUANG 3/7 • KOLEKSI PUJIAN</p>
+    <h2>Kalau aku harus jelasin kamu hari ini...</h2>
+    <div class="cards-deck">
+      <div class="puji-card active" id="card-1">
+        <div class="puji-quote-sign">"</div>
+        <p class="puji-text">Kalau cantik ada level mythic, kamu tuh bukan naik rank lagi, kamu udah jadi server-nya.</p>
+      </div>
+      <div class="puji-card" id="card-2">
+        <div class="puji-quote-sign">"</div>
+        <p class="puji-text">Foto ini harusnya dikasih pagar museum, soalnya kalau dibiarkan bebas bisa bikin orang jatuh cinta massal.</p>
+      </div>
+      <div class="puji-card" id="card-3">
+        <div class="puji-quote-sign">"</div>
+        <p class="puji-text">Kamu tuh kayak puisi yang nggak perlu rima, karena sekali dilihat aja udah selesai bikin aku kalah.</p>
+      </div>
+      <div class="puji-card" id="card-4">
+        <div class="puji-quote-sign">"</div>
+        <p class="puji-text">Kesimpulan resmi: kamu terlalu indah buat dibales cuma dengan kata "cakep". Kurang banget.</p>
+      </div>
+    </div>
+    <div class="deck-counter"><span id="deck-idx">1</span>/4 · ketuk buat lanjut</div>
+    <button class="btn-custom" onclick="shiftNextCard()">Kartu berikutnya</button>
+  </div>
+
+  <!-- ============ SCREEN 9: TRUTH ============ -->
+  <div id="s9" class="screen">
+    <p class="subtitle">RUANG 4/7 • YANG SEBENARNYA</p>
+    <h2>Tapi kamu bukan cuma cantik.</h2>
+    <div class="paper-card" style="margin-top: 25px;">
+      <p>Iya, kamu cantik. Tapi masalahnya bukan cuma cantik.</p>
+      <p>Kamu tuh punya cara bikin dunia mendadak pelan. Kayak semua hal ribut di kepala aku langsung nurut diem cuma karena kamu muncul.</p>
+      <p>Aku suka wajahmu, jelas. Tapi aku lebih suka caramu ada. Caramu bikin hal kecil terasa hangat. Caramu bikin aku pengin jadi versi yang lebih lembut, lebih sabar, dan lebih sering bilang: aku sayang kamu.</p>
+    </div>
+    <button class="btn-custom btn-primary" onclick="goToScreen('s10')">Lanjut</button>
+  </div>
+
+  <!-- ============ SCREEN 10: WAX SEAL ============ -->
+  <div id="s10" class="screen">
+    <p class="subtitle">RUANG 5/7 • SURAT</p>
+    <h2>Satu pesan terakhir</h2>
+    <div style="background: white; padding: 22px; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); width: 100%; margin-top: 25px; text-align: center;">
+      <p style="font-size: 0.86rem; color: var(--text-main); margin-bottom: 15px;">Aku simpan bagian paling jujur di akhir.</p>
+      <div class="wax-area">
+        <button id="wax-btn" class="wax-btn-circle" onmousedown="startPress(event)" onmouseup="cancelPress(event)" onmouseleave="cancelPress(event)" ontouchstart="startPress(event)" ontouchend="cancelPress(event)">
+          <div class="progress-ring"></div>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
+      </div>
+      <p style="margin-top: 15px; font-size: 0.78rem; color: var(--text-muted);">tahan segelnya sampai terbuka 💌</p>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 11: LETTER ============ -->
+  <div id="s11" class="screen">
+    <p class="subtitle">RUANG 5/7 • SURAT</p>
+    <h2>Satu pesan terakhir</h2>
+    <div class="paper-card" style="margin-top: 15px; font-size: 0.82rem; padding: 22px 18px;">
+      <p class="cursive" style="font-size: 1.7rem; margin-bottom: 12px; color: var(--text-main);">Sayang,</p>
+      <p>Aku awalnya cuma mau balas PAP kamu dengan kalimat normal. Sesimpel "cantik banget" atau "manis banget". Tapi setelah dilihat lagi, kok rasanya kalimat biasa tuh kayak payung kecil dipakai buat nutupin langit. Nggak cukup.</p>
+      <p>Kamu di foto ini cantiknya keterlaluan. Bukan keterlaluan yang bikin jauh, tapi yang bikin aku pengin deket-deket sambil bilang pelan: ini orang yang aku sayang.</p>
+      <p>Kadang aku heran, kok bisa satu foto bikin aku senyum sendiri, mikir lama, terus kangen padahal kamu cuma lagi muncul di layar. Mungkin karena buat aku, kamu bukan sekadar cantik. Kamu rumah kecil yang bisa aku lihat dari mana aja.</p>
+      <p>Jadi kalau nanti kamu tanya, "gimana fotonya?" Jawabanku bukan cuma cantik.</p>
+      <p style="font-style: italic; color: var(--text-main);">Jawabanku: kamu cantik banget, manis banget, dan aku masih jatuh cinta sama kamu dengan cara yang paling norak tapi paling jujur.</p>
+      <p style="margin-top: 15px; text-align: right;">Dari Nawal,<br><span style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">yang selalu suka melihat kamu, dan lebih suka lagi menyayangi kamu.</span></p>
+    </div>
+    <button class="btn-custom btn-primary" onclick="goToScreen('s12')">Lanjut</button>
+  </div>
+
+  <!-- ============ SCREEN 12: CERTIFICATE ============ -->
+  <div id="s12" class="screen">
+    <p class="subtitle">RUANG 6/7 • SERTIFIKAT</p>
+    <h2>Momen ini resmi dicatat</h2>
+    <div class="cert-outer" id="cert-area">
+      <div class="cert-box-inner">
+        <p class="cert-tag">GALERI PRIBADI · DOKUMEN RESMI</p>
+        <h3 class="cert-heading">Certified Pretty Moment</h3>
+        <p style="font-size: 0.72rem; color: var(--text-muted);">Sertifikat ini menyatakan bahwa</p>
+        <div class="cert-name-line"><div class="cert-name-txt">Bungaa</div></div>
+        <p class="cert-desc">secara resmi berhasil membuat <strong>Nawal</strong> diam sebentar, senyum sendiri, dan lupa cara balas chat dengan normal.</p>
+        <div class="cert-details-grid">
+          <div>
+            <p>APPROVED BY: <strong>NAWAL YANG SALTING</strong></p>
+            <p>STATUS: <strong>CANTIK LEVEL BAHAYA</strong></p>
+            <p>VALID UNTIL: <strong>SELAMANYA</strong></p>
+            <div class="cert-sign-font">Nawal</div>
+            <p style="font-size: 0.48rem; margin-top: 3px;">TANDA TANGAN PENUH SAYANG</p>
+          </div>
+          <div style="text-align: right; display: flex; align-items: flex-end;">
+            <div style="border: 2px solid var(--accent-pink); color: var(--accent-pink); padding: 4px 8px; font-weight: bold; transform: rotate(-8deg); font-size: 0.65rem; background: #fff;">TERLALU<br>CANTIK<br>RESMI +</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 15px;">Download lalu kirim ke WhatsApp ya! 🤍</p>
+    <div class="action-group">
+      <button class="btn-custom" onclick="downloadSertifikat()">Unduh Sertifikat 📥</button>
+      <button class="btn-custom btn-primary" onclick="shareKeWA()">Kirim Teks ke WhatsApp 💬</button>
+    </div>
+    <button class="btn-custom" style="background: transparent; border: none; margin-top: 5px; font-size: 0.75rem;" onclick="goToScreen('s1'); resetPinEngine();">Mulai Ulang ↺</button>
+  </div>
+
+</div>
+
+<script>
+// --- 1. PASSCODE ENGINE ---
+const SECRET_PIN = "0924";
+let enteredPin = "";
+
+function pressKey(n) {
+  if (enteredPin.length < 4) {
+    enteredPin += n;
+    renderPinDots();
+  }
+  if (enteredPin.length === 4) {
+    setTimeout(validatePinCode, 250);
+  }
+}
+function deleteKey() {
+  if (enteredPin.length > 0) {
+    enteredPin = enteredPin.slice(0, -1);
+    renderPinDots();
+    document.getElementById('pass-msg').innerText = "";
+  }
+}
+function renderPinDots() {
+  for (let i = 1; i <= 4; i++) {
+    const dotEl = document.getElementById(`dot-${i}`);
+    if (i <= enteredPin.length) dotEl.classList.add("filled");
+    else dotEl.classList.remove("filled");
+  }
+}
+function resetPinEngine() {
+  enteredPin = "";
+  renderPinDots();
+  document.getElementById('pass-msg').innerText = "";
+}
+function validatePinCode() {
+  const msgEl = document.getElementById('pass-msg');
+  if (enteredPin === SECRET_PIN) {
+    msgEl.innerText = "yeay, kamu berhasil!";
+    msgEl.style.color = "var(--text-main)";
+    setTimeout(() => goToScreen('s2'), 700);
+  } else {
+    msgEl.innerText = "Kodenya salah, coba ingat lagi 🤍";
+    msgEl.style.color = "var(--accent-pink)";
+    const row = document.querySelector('.dots-row');
+    row.style.transform = "translateX(-8px)";
+    setTimeout(() => row.style.transform = "translateX(8px)", 80);
+    setTimeout(() => row.style.transform = "translateX(-8px)", 160);
+    setTimeout(() => row.style.transform = "translateX(0)", 240);
+    setTimeout(() => { enteredPin = ""; renderPinDots(); }, 550);
+  }
+}
+
+// --- NAVIGATION ROUTER ---
+function goToScreen(targetId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(targetId).classList.add('active');
+  setTimeout(() => {
+    document.getElementById('app').scrollTo({top: 0, behavior: 'instant'});
+  }, 50);
+  if (targetId === 's3') {
+    document.getElementById('check-box-list').style.display = 'none';
+    document.getElementById('btn-init-scan').style.display = 'flex';
+    document.getElementById('btn-proceed-art').style.display = 'none';
+    document.getElementById('scan-hint-msg').style.display = 'block';
+    document.getElementById('polaroid-area').classList.remove('scanned');
+    document.getElementById('scanner-bar').style.display = 'none';
+    document.querySelectorAll('.check-row').forEach(r => {
+      r.classList.remove('show');
+      r.classList.remove('done');
+    });
+  }
+}
+
+// --- 2. FLOWER BURST ANIMATION ---
+const floralImages = [
+  'https://cdn.pixabay.com/photo/2017/02/10/16/22/flower-2055620_960_720.png',
+  'https://cdn.pixabay.com/photo/2016/11/22/19/23/blossom-1850162_960_720.png',
+  'https://cdn.pixabay.com/photo/2014/12/21/23/34/cherry-blossom-575510_960_720.png'
+];
+function openEnvelopeSequence() {
+  document.getElementById('wax-svg-circle').setAttribute('fill', '#F0C2C1');
+  document.querySelector('.env-text-hint').style.opacity = '0';
+  setTimeout(fireFloralExplosion, 250);
+}
+function fireFloralExplosion() {
+  const overlay = document.getElementById('bloom-overlay');
+  overlay.style.display = 'block';
+  overlay.innerHTML = '';
+  for (let i = 0; i < 45; i++) {
+    setTimeout(() => {
+      let fItem = document.createElement('div');
+      fItem.className = 'burst-flower';
+      let sz = Math.random() * 140 + 90;
+      fItem.style.width = sz + 'px';
+      fItem.style.height = sz + 'px';
+      fItem.style.left = (Math.random() * 120 - 10) + 'vw';
+      fItem.style.top = (Math.random() * 120 - 10) + 'vh';
+      fItem.style.backgroundImage = `url(${floralImages[Math.floor(Math.random() * floralImages.length)]})`;
+      let rotDeg = Math.random() * 360;
+      overlay.appendChild(fItem);
+      setTimeout(() => {
+        fItem.style.transform = `scale(1) rotate(${rotDeg}deg)`;
+        fItem.style.opacity = '1';
+      }, 15);
+    }, i * 30);
+  }
+  setTimeout(() => {
+    overlay.style.transition = "background-color 0.7s";
+    overlay.style.backgroundColor = "var(--bg-color)";
+    setTimeout(() => {
+      goToScreen('s3');
+      overlay.style.transition = "opacity 0.9s";
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '1';
+        overlay.style.backgroundColor = "transparent";
+      }, 900);
+    }, 700);
+  }, 1600);
+}
+
+// --- 3. SCAN ENGINE ---
+function runScanEngine() {
+  document.getElementById('btn-init-scan').style.display = 'none';
+  document.getElementById('scanner-bar').style.display = 'block';
+  document.getElementById('scan-hint-msg').style.display = 'none';
+  document.getElementById('check-box-list').style.display = 'flex';
+  const startDelays = [400, 1300, 2200];
+  const checkDuration = 700;
+  for (let j = 0; j < 3; j++) {
+    setTimeout(() => {
+      document.getElementById(`row-${j+1}`).classList.add('show');
+    }, startDelays[j]);
+    setTimeout(() => {
+      document.getElementById(`row-${j+1}`).classList.add('done');
+    }, startDelays[j] + checkDuration);
+  }
+  setTimeout(() => {
+    document.getElementById('scanner-bar').style.display = 'none';
+    document.getElementById('polaroid-area').classList.add('scanned');
+    setTimeout(() => {
+      document.getElementById('btn-proceed-art').style.display = 'flex';
+    }, 800);
+  }, 3500);
+}
+
+// --- 5. TYPING ENGINE ---
+const reactionTexts = [
+  "astaga...",
+  "ini PAP apa serangan jantung manis?",
+  "bentar... ini harus dibales niat."
+];
+let currentMsgIdx = 0;
+let charIndex = 0;
+let typeInstance = null;
+function initTypewriter() {
+  const container = document.getElementById('chat-container');
+  container.innerHTML = "";
+  currentMsgIdx = 0;
+  charIndex = 0;
+  const btnSkip = document.getElementById('btn-skip-typing');
+  btnSkip.style.opacity = '0';
+  btnSkip.style.pointerEvents = 'none';
+  clearTimeout(typeInstance);
+  startNextBubble();
+}
+function startNextBubble() {
+  if (currentMsgIdx < reactionTexts.length) {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble-view';
+    const textSpan = document.createElement('span');
+    textSpan.id = 'typing-target-' + currentMsgIdx;
+    textSpan.style.fontSize = '0.88rem';
+    textSpan.style.color = 'var(--text-main)';
+    const cursorSpan = document.createElement('span');
+    cursorSpan.className = 'blinking-cursor';
+    cursorSpan.id = 'cursor-' + currentMsgIdx;
+    bubble.appendChild(textSpan);
+    bubble.appendChild(cursorSpan);
+    document.getElementById('chat-container').appendChild(bubble);
+    charIndex = 0;
+    executeTyping();
+  } else {
+    setTimeout(() => {
+      const btnSkip = document.getElementById('btn-skip-typing');
+      btnSkip.style.opacity = '1';
+      btnSkip.style.pointerEvents = 'auto';
+    }, 400);
+  }
+}
+function executeTyping() {
+  const currentText = reactionTexts[currentMsgIdx];
+  const targetSpan = document.getElementById('typing-target-' + currentMsgIdx);
+  if (charIndex < currentText.length) {
+    targetSpan.innerHTML += currentText.charAt(charIndex);
+    charIndex++;
+    typeInstance = setTimeout(executeTyping, 60);
+  } else {
+    document.getElementById('cursor-' + currentMsgIdx).style.display = 'none';
+    currentMsgIdx++;
+    setTimeout(startNextBubble, 700);
+  }
+}
+
+// --- 7. PINPOINTS INTERACTION ---
+let totalOpenedPins = 0;
+function appendPinChat(elem, text) {
+  if (elem.hasAttribute('data-seen')) return;
+  elem.setAttribute('data-seen', 'true');
+  elem.classList.add('active');
+  const feedContainer = document.getElementById('pin-chat-feed');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble-view';
+  bubble.style.minHeight = 'auto';
+  bubble.style.padding = '12px 16px';
+  bubble.style.width = 'fit-content';
+  bubble.style.maxWidth = '90%';
+  bubble.style.borderBottomLeftRadius = '4px';
+  bubble.style.marginTop = '0';
+  bubble.style.animation = 'fadeSlideUp 0.4s ease forwards';
+  bubble.style.opacity = '0';
+  bubble.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-main); font-weight: 500;">${text}</span>`;
+  feedContainer.appendChild(bubble);
+  totalOpenedPins++;
+  document.getElementById('pin-tally').innerText = `${totalOpenedPins}/4 catatan kebuka`;
+  if (totalOpenedPins === 4) {
+    document.getElementById('btn-pass-s7').style.display = 'flex';
+  }
+  setTimeout(() => {
+    const appContainer = document.getElementById('app');
+    appContainer.scrollTo({ top: appContainer.scrollHeight, behavior: 'smooth' });
+  }, 150);
+}
+
+// --- 8. CARD SLIDER ENGINE ---
+let activeCardIdx = 1;
+const totalCardsCount = 4;
+function shiftNextCard() {
+  const currentC = document.getElementById(`card-${activeCardIdx}`);
+  currentC.classList.remove('active');
+  currentC.classList.add('prev');
+  activeCardIdx++;
+  if (activeCardIdx > totalCardsCount) {
+    goToScreen('s9');
+    setTimeout(() => {
+      for (let i = 1; i <= totalCardsCount; i++) {
+        let cItem = document.getElementById(`card-${i}`);
+        cItem.classList.remove('prev');
+        cItem.classList.remove('active');
+      }
+      activeCardIdx = 1;
+      document.getElementById('card-1').classList.add('active');
+      document.getElementById('deck-idx').innerText = "1";
+    }, 800);
+    return;
+  }
+  document.getElementById('deck-idx').innerText = activeCardIdx;
+  const nextC = document.getElementById(`card-${activeCardIdx}`);
+  nextC.classList.add('active');
+}
+
+// --- 10. LONG PRESS ENGINE (WAX SEAL) ---
+let pressTimer;
+function startPress(e) {
+  if (e && e.type === 'touchstart') e.preventDefault();
+  const btn = document.getElementById('wax-btn');
+  btn.classList.add('pressing');
+  pressTimer = setTimeout(() => {
+    btn.classList.remove('pressing');
+    goToScreen('s11');
+  }, 1500);
+}
+function cancelPress(e) {
+  clearTimeout(pressTimer);
+  document.getElementById('wax-btn').classList.remove('pressing');
+}
+
+// --- 12. DOWNLOAD & SHARE SERTIFIKAT ---
+function downloadSertifikat() {
+  const certElement = document.getElementById('cert-area');
+  html2canvas(certElement, { scale: 2, backgroundColor: "#FAF4F2" }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'Sertifikat-Cantik-Bungaa.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+function shareKeWA() {
+  const pesan = "Lapor! Sertifikat cantik Bungaa udah diverifikasi dan sah. Momen ini udah resmi dicatat di galeri hati! 🤍✨\n\n*(Kirim gambar sertifikat yang barusan di-download bareng pesan ini)*";
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(pesan)}`;
+  window.open(waUrl, '_blank');
+}
+</script>
+</body>
+</html>
